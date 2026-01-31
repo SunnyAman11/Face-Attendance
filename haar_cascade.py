@@ -5,9 +5,12 @@ face_cascade = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_alt.xml"
 )
 
-file='database_photos'
+# file='database_photos'
+#
+# img = cv2.imread(os.path.join(file,"Ratan_Tata.jpeg"))
 
-img = cv2.imread(os.path.join(file,"Ratan_Tata.jpeg"))
+img = cv2.imread('CS2026_frame.JPG')
+
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 faces = face_cascade.detectMultiScale(
@@ -19,6 +22,9 @@ faces = face_cascade.detectMultiScale(
 
 for (x, y, w, h) in faces:
     cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+img = cv2.resize(img, (800, 600))
+
 
 cv2.imshow("Faces", img)
 cv2.waitKey(0)

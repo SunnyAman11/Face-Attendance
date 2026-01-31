@@ -2,16 +2,19 @@ import face_recognition
 import cv2
 import numpy as np
 import os
+import time
 
-dataImg = 'players'
-saved_ = 'captured_images'
-register = 'dlib_register'
+import pandas as pd
 
-os.makedirs(saved_, exist_ok=True)
+dataImg = 'Computer_Batch_2022'
+register = 'CS2026_frame_dlib'
 
-input_img = 'indianCricket.jpg'
+
+input_img = 'CS2026_frame.JPG'
 
 enc_vec = {}
+
+Known_inference ={}
 
 for img in os.listdir(dataImg):
 
@@ -22,7 +25,12 @@ for img in os.listdir(dataImg):
 
     img_read = face_recognition.load_image_file(img_path)
 
+    t11 = time.time()
     face_encs = face_recognition.face_encodings(img_read)
+    t12 = time.time()
+
+    t1= t12 - t11
+    Known_inference[img] = t1
 
     if len(face_encs) == 0:
         continue
@@ -38,12 +46,19 @@ count = 0
 
 img_ = face_recognition.load_image_file(input_img)
 
+
 rgb_img = img_.copy()
 
-
+t21 = time.time()
 face_locations = face_recognition.face_locations(img_)
+t22 = time.time()
+
 #print(face_locations)
+t2 = t22 - t21
+tf = t2
+
 input_enc = face_recognition.face_encodings(img_, face_locations)
+
 
 bgr_img = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2BGR)
 
@@ -51,7 +66,15 @@ bgr_img = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2BGR)
 attendance = []
 count = 0
 
-for encoding, (top, right, bottom, left) in zip(input_enc, face_locations):
+name = []
+
+inf_frame = []
+
+names = []
+
+detection_time_total = tf
+
+for encoding, loc in zip(input_enc, face_locations):
 
     distance_dict = {}
 
@@ -72,17 +95,34 @@ for encoding, (top, right, bottom, left) in zip(input_enc, face_locations):
         attendance.append("unknown")
     print('/n')
 
+    top, right, bottom, left = loc
+    # Face ROI
+    img_roi = rgb_img[top:bottom, left:right]
 
+    t3 = time.time()
+    encoding = face_recognition.face_encodings(rgb_img, [loc])[0]
+    t4 = time.time()
+    encoding_time = t4 - t3
 
+    # file_name = f"{best_name}_{count}.jpg"
+    # count += 1
+    """
+    inf_frame.append({
+        "face_id": f"{best_name}_{count}",
+        "encoding_time_sec": encoding_time,
+        "name": best_name
+    })
+    """
     img_roi = img_[top:bottom, left:right]
 
     img_roi_bgr = cv2.cvtColor(img_roi, cv2.COLOR_RGB2BGR)
 
+    """
     file_name = f"{best_name}_{count}.jpg"
     save_path = os.path.join(register, file_name)
     count +=1
     cv2.imwrite(save_path, img_roi_bgr)
-
+    """
 print(attendance)
 
 for (top, right, bottom, left) in face_locations:
@@ -112,7 +152,20 @@ for (top, right, bottom, left) in face_locations:
 cv2.destroyAllWindows()
 """
 
-
+bgr_img = cv2.resize(bgr_img,(800,600))
 cv2.imshow("Labeled Faces", bgr_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
+
+
+
+"""
+print("detection_time_sec: ", detection_time_total)  # approx per face
+
+
+df = pd.DataFrame(inf_frame)
+df.to_csv("face_recognition_inference_times_frame.csv", index=False)
+
+print("Attendance:", attendance)
+"""
